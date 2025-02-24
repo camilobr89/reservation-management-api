@@ -31,7 +31,7 @@ export const getRoomById = async (roomId: string) => {
         const result = await dynamoDB.get(params).promise();
         return result.Item || null;
     } catch (error) {
-        console.error('❌ Error fetching room:', error);
+        console.error('Error fetching room:', error);
         return null;
     }
 };

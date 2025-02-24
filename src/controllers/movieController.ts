@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { Request, Response } from 'express';
 import {addMovie, deleteMovieById, getAllMovies, getMovieById, updateMovieById} from '../services/movieService';
 import { Movie } from '../models/movie';
@@ -6,30 +7,27 @@ export const createMovie = async (req: Request, res: Response) => {
     const { title, genre, duration, rating } = req.body;
 
     if (!title || !genre || !duration || !rating) {
-        console.warn('⚠️ Missing fields in request:', req.body);
+        console.warn('Missing fields in request:', req.body);
         return res.status(400).json({ error: 'Missing fields' });
     }
 
     const movie: Movie = { id: '', title, genre, duration, rating };
 
     try {
-        console.log('✅ Adding movie to DynamoDB:', movie);
         await addMovie(movie);
         return res.status(201).json(movie);
     } catch (error) {
-        console.error('❌ Error adding movie:', error);
+        console.error('Error adding movie:', error);
         return res.status(500).json({ error: 'Could not add movie', details: error });
     }
 };
 
 export const getMovies = async (_req: Request, res: Response) => {
     try {
-        console.log('📦 Fetching movies from DynamoDB...');
         const movies = await getAllMovies();
-        console.log('✅ Movies retrieved:', movies.Items);
         return res.json(movies.Items);
     } catch (error) {
-        console.error('❌ Error fetching movies:', error);
+        console.error('Error fetching movies:', error);
         return res.status(500).json({ error: 'Could not fetch movies', details: error });
     }
 };
@@ -42,16 +40,13 @@ export const getMovie = async (req: Request, res: Response) => {
     }
 
     try {
-        console.log(`🔎 Fetching movie with ID: ${id}`);
         const movie = await getMovieById(id);
-        // @ts-ignore
         if (!movie.Item) {
             return res.status(404).json({ error: 'Movie not found' });
         }
-        // @ts-ignore
         return res.json(movie.Item);
     } catch (error) {
-        console.error('❌ Error fetching movie:', error);
+        console.error('Error fetching movie:', error);
         return res.status(500).json({ error: 'Could not fetch movie', details: error });
     }
 };

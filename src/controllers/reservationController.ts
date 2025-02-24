@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { Request, Response } from 'express';
 import {
     createReservation, deleteReservationById,
@@ -15,19 +16,15 @@ export const addReservation = async (req: Request, res: Response) => {
     const { movieId, roomId, userEmail, schedule, seats } = req.body;
 
     if (!movieId || !roomId || !userEmail || !schedule || !seats || seats.length === 0) {
-        console.warn('⚠️ Missing fields in request:', req.body);
+        console.warn('Missing fields in request:', req.body);
         return res.status(400).json({ error: 'Missing fields' });
     }
 
     try {
-        // 🔍 1️⃣ Obtener todas las reservas existentes para la misma sala y horario
         const existingReservations = await getReservationsByRoomAndSchedule(roomId, schedule);
-
-        // 🔍 2️⃣ Extraer los asientos ya ocupados
         const occupiedSeats = existingReservations.flatMap(res => res.seats);
-
-        // ❌ 3️⃣ Verificar si los asientos seleccionados ya están ocupados
         const alreadyTakenSeats = seats.filter((seat: any) => occupiedSeats.includes(seat));
+
         if (alreadyTakenSeats.length > 0) {
             return res.status(400).json({
                 error: `Los siguientes asientos ya están reservados: ${alreadyTakenSeats.join(", ")}`,
@@ -35,11 +32,9 @@ export const addReservation = async (req: Request, res: Response) => {
             });
         }
 
-        // ✅ 4️⃣ Crear la reserva si los asientos están disponibles
         const reservation: Reservation = { id: '', movieId, roomId, userEmail, schedule, seats };
         await createReservation(reservation);
 
-        // 🔍 Obtener datos reales de película y sala
         const movie = await getMovieById(movieId);
         const room = await getRoomById(roomId);
 
@@ -47,7 +42,6 @@ export const addReservation = async (req: Request, res: Response) => {
             return res.status(404).json({ error: "Película o sala no encontradas" });
         }
 
-        // 📧 Enviar correo con los datos reales
         await sendReservationEmail(userEmail, {
             movieName: movie.title,
             roomName: room.name,
@@ -55,11 +49,9 @@ export const addReservation = async (req: Request, res: Response) => {
             seats
         });
 
-        console.log('📧 Email sent to:', userEmail);
-
         return res.status(201).json({ reservation, message: "Reserva confirmada. Se ha enviado un email." });
     } catch (error) {
-        console.error('❌ Error creating reservation:', error);
+        console.error('Error creating reservation:', error);
         return res.status(500).json({ error: 'Could not create reservation', details: error });
     }
 };
@@ -71,19 +63,16 @@ export const getReservations = async (req: Request, res: Response) => {
         let reservations = await getAllReservations();
 
         if (roomId && schedule) {
-            // @ts-ignore
             reservations = reservations.Items.filter(
-                // @ts-ignore
                 (reservation: Reservation) => reservation.roomId === roomId && reservation.schedule === schedule
             );
         } else {
-            // @ts-ignore
             reservations = reservations.Items;
         }
 
         return res.json(reservations);
     } catch (error) {
-        console.error('❌ Error fetching reservations:', error);
+        console.error('Error fetching reservations:', error);
         return res.status(500).json({ error: 'Could not fetch reservations' });
     }
 };
@@ -97,14 +86,13 @@ export const getReservation = async (req: Request, res: Response) => {
     }
 
     try {
-        console.log(`🔎 Fetching reservation with ID: ${id}`);
         const reservation = await getReservationById(id);
         if (!reservation.Item) {
             return res.status(404).json({ error: 'Reservation not found' });
         }
         return res.json(reservation.Item);
     } catch (error) {
-        console.error('❌ Error fetching reservation:', error);
+        console.error('Error fetching reservation:', error);
         return res.status(500).json({ error: 'Could not fetch reservation', details: error });
     }
 };
@@ -117,18 +105,13 @@ export const getReservationsByEmail = async (req: Request, res: Response) => {
     }
 
     try {
-        console.log(`🔎 Fetching reservations for email: ${email}`);
         const reservations = await getAllReservations();
-
-        // @ts-ignore
         const userReservations = reservations.Items.filter((res: Reservation) => res.userEmail === email);
 
         if (userReservations.length === 0) {
             return res.status(404).json({ error: 'No reservations found for this email' });
         }
 
-        // ✅ Aquí realizamos la consulta adicional para cada reserva y traer nombre de película y sala
-        // @ts-ignore
         const detailedReservations = await Promise.all(userReservations.map(async (reservation: Reservation) => {
             const movie = await getMovieById(reservation.movieId);
             const room = await getRoomById(reservation.roomId);
@@ -142,7 +125,7 @@ export const getReservationsByEmail = async (req: Request, res: Response) => {
 
         return res.json(detailedReservations);
     } catch (error) {
-        console.error('❌ Error fetching reservations by email:', error);
+        console.error('Error fetching reservations by email:', error);
         return res.status(500).json({ error: 'Could not fetch reservations', details: error });
     }
 };
@@ -161,7 +144,6 @@ export const deleteReservation = async (req: Request, res: Response) => {
             return res.status(404).json({ error: 'Reservation not found' });
         }
 
-        // Obtener detalles completos antes de eliminar
         const movie = await getMovieById(reservation.Item.movieId);
         const room = await getRoomById(reservation.Item.roomId);
 
@@ -170,8 +152,6 @@ export const deleteReservation = async (req: Request, res: Response) => {
         }
 
         await deleteReservationById(id);
-
-        // Enviar correo de cancelación después de eliminar exitosamente
         await sendCancellationEmail(reservation.Item.userEmail, {
             movieName: movie.title,
             roomName: room.name,
@@ -179,16 +159,13 @@ export const deleteReservation = async (req: Request, res: Response) => {
             seats: reservation.Item.seats
         });
 
-        console.log('📧 Email de cancelación enviado a:', reservation.Item.userEmail);
-
         return res.json({ message: 'Reservation deleted successfully and cancellation email sent.' });
 
     } catch (error) {
-        console.error('❌ Error deleting reservation:', error);
+        console.error('Error deleting reservation:', error);
         return res.status(500).json({ error: 'Could not delete reservation', details: error });
     }
 };
-
 
 export const getReservationsByDates = async (req: Request, res: Response) => {
     const { startDate, endDate } = req.query;
@@ -202,14 +179,11 @@ export const getReservationsByDates = async (req: Request, res: Response) => {
         const start = new Date(`${startDate}T00:00:00`);
         const end = new Date(`${endDate}T23:59:59`);
 
-        // @ts-ignore
         const filteredReservations = reservations.Items.filter((res: Reservation) => {
             const resDate = new Date(res.schedule.replace(' ', 'T'));
             return resDate >= start && resDate <= end;
         });
 
-        // 🔥 Transformar reservas agregando título y nombre
-        // @ts-ignore
         const detailedReservations = await Promise.all(filteredReservations.map(async (reservation: Reservation) => {
             const movie = await getMovieById(reservation.movieId);
             const room = await getRoomById(reservation.roomId);

@@ -6,8 +6,6 @@ dotenv.config();
 
 AWS.config.update({
     region: process.env.AWS_REGION,
-    accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY
 });
 
 const ses = new AWS.SES({ apiVersion: '2010-12-01' });
@@ -23,7 +21,7 @@ export const sendReservationEmail = async (toEmail: string, reservationDetails: 
                     Data: `
                         <html>
                             <body style=\"font-family: Arial, sans-serif; color: #333;\">
-                                <h2 style=\"color: #007bff;\">🎬 ¡Tu reserva está confirmada! 🎬</h2>
+                                <h2 style=\"color: #007bff;\">🎬 ¡Tu reserva está confirmada!</h2>
                                 <p>Hola,</p>
                                 <p>Gracias por reservar tu entrada en nuestro cine. Aquí están los detalles de tu reserva:</p>
                                 <ul>
@@ -63,7 +61,7 @@ export const sendCancellationEmail = async (toEmail: string, reservationDetails:
                     Data: `
                         <html>
                             <body style=\"font-family: Arial, sans-serif; color: #333;\">
-                                <h2 style=\"color: #dc3545;\">❌ Reserva Cancelada ❌</h2>
+                                <h2 style=\"color: #dc3545;\">Reserva Cancelada</h2>
                                 <p>Hola,</p>
                                 <p>Tu reserva ha sido cancelada. Aquí están los detalles:</p>
                                 <ul>

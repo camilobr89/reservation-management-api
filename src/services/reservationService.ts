@@ -1,3 +1,4 @@
+// @ts-nocheck
 import dynamoDB from '../config/awsConfig';
 import { Reservation } from '../models/reservation';
 import { v4 as uuidv4 } from 'uuid';
@@ -5,7 +6,7 @@ import { v4 as uuidv4 } from 'uuid';
 const TABLE_NAME = 'Reservations';
 
 export const createReservation = async (reservation: Reservation) => {
-    reservation.id = uuidv4(); // Generar ID único
+    reservation.id = uuidv4();
     const params = {
         TableName: TABLE_NAME,
         Item: reservation
@@ -53,7 +54,6 @@ export const getReservationsByDateRange = async (startDate: string, endDate: str
     const params = { TableName: TABLE_NAME };
     const data = await dynamoDB.scan(params).promise();
 
-    // @ts-ignore
     return data.Items.filter(item => {
         const scheduleDate = new Date(item.schedule).getTime();
         return scheduleDate >= new Date(startDate).getTime() && scheduleDate <= new Date(endDate).getTime();

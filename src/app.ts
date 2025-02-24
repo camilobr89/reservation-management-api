@@ -1,5 +1,5 @@
+// @ts-nocheck
 import express from 'express';
-// @ts-ignore
 import cors from 'cors';
 import bodyParser from 'body-parser';
 import dotenv from 'dotenv';

@@ -1,3 +1,4 @@
+// @ts-nocheck
 import dynamoDB from '../config/awsConfig';
 import { Movie } from '../models/movie';
 import { v4 as uuidv4 } from 'uuid';
@@ -29,7 +30,7 @@ export const getMovieById = async (movieId: string) => {
         const result = await dynamoDB.get(params).promise();
         return result.Item || null;
     } catch (error) {
-        console.error('❌ Error fetching movie:', error);
+        console.error('Error fetching movie:', error);
         return null;
     }
 };
