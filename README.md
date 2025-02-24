@@ -18,7 +18,7 @@ Este proyecto implementa una API RESTful para la gestión de reservas de un cine
 
 ## 🔧 Requisitos
 
-Para ejecutar este proyecto, necesitarás configurar las siguientes variables de entorno creando en la raiz del proyecto el archivo .env:
+Para ejecutar este proyecto, necesitarás minimo node v20 o superior y configurar las siguientes variables de entorno creando en la raiz del proyecto el archivo .env:
 
 ```env
 AWS_REGION=us-east-1
